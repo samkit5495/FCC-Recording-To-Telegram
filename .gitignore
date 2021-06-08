@@ -2,3 +2,5 @@ venv
 .vscode
 .env
 *.session
+__pycache__
+*.pyc
