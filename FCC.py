@@ -34,7 +34,7 @@ class FCC:
         resp = self.call('get', 'v4/conferences', {
             'has_recordings':'true',
             'order_by':'start_date',
-            'order':'ASC'
+            'order':'DESC'
         })
         return resp['conferences']
     
