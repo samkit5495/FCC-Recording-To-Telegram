@@ -29,7 +29,7 @@ for c in conf:
     print(c['id'])
     if not c['deleted'] and 'recording_url' in c and c['recording_url'] != '':
         try:
-            r = requests.get(c['recording_url']+'.mp3', allow_redirects=True)
+            r = requests.get(c['recording_url']+'.mp3', allow_redirects=True, verify=False)
             print('file downloaded')
             file = client.upload_file(r.content, file_name=datetime.fromtimestamp(c['start_time']).strftime('%Y-%m-%d')+'.mp3')
             message = client.send_file(my_private_channel, file)
