@@ -15,7 +15,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from dotenv import dotenv_values, set_key
-from telethon import TelegramClient
+import requests
 import logging
 
 # Setup logging
@@ -42,33 +42,30 @@ class FCCCredentialRenewer:
             'purpose': self.config.get('FCC_PURPOSE', 'Automated conference recording management and integration with Telegram bot')
         }
         
-        # Initialize Telegram client if credentials available
-        self.telegram_client = None
-        self.telegram_channel = None
-        if self.config.get('api_id') and self.config.get('api_hash'):
-            try:
-                self.telegram_client = TelegramClient('session_name', 
-                                                     self.config['api_id'], 
-                                                     self.config['api_hash'])
-                self.telegram_client.start()
-                
-                # Find the target channel/chat
-                for dialog in self.telegram_client.iter_dialogs():
-                    if dialog.name == self.config.get('sendTo'):
-                        self.telegram_channel = dialog
-                        break
-                        
-                logging.info("✓ Telegram client initialized")
-            except Exception as e:
-                logging.warning(f"Could not initialize Telegram: {str(e)}")
-                self.telegram_client = None
+        # Initialize Telegram bot configuration
+        self.bot_token = self.config.get('TELEGRAM_BOT_TOKEN')
+        self.chat_id = self.config.get('TELEGRAM_CHAT_ID')
+        
+        if self.bot_token and self.chat_id:
+            logging.info("✓ Telegram bot configured")
+        else:
+            logging.warning("Telegram bot not configured (missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID)")
     
     def send_telegram_message(self, message):
-        """Send status update to Telegram"""
+        """Send status update to Telegram using Bot API"""
         try:
-            if self.telegram_client and self.telegram_channel:
-                self.telegram_client.send_message(self.telegram_channel, message)
-                logging.info(f"Telegram notification sent: {message[:50]}...")
+            if self.bot_token and self.chat_id:
+                url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
+                payload = {
+                    'chat_id': self.chat_id,
+                    'text': message,
+                    'parse_mode': 'HTML'
+                }
+                response = requests.post(url, json=payload, timeout=10)
+                if response.status_code == 200:
+                    logging.info(f"Telegram notification sent: {message[:50]}...")
+                else:
+                    logging.warning(f"Failed to send Telegram message: {response.text}")
         except Exception as e:
             logging.warning(f"Failed to send Telegram message: {str(e)}")
         
@@ -383,10 +380,6 @@ class FCCCredentialRenewer:
         logging.info("=" * 50)
         
         self.send_telegram_message("🎉 FCC Credential Renewal Completed Successfully!")
-        
-        # Cleanup Telegram client
-        if self.telegram_client:
-            self.telegram_client.disconnect()
         
         return True
 
