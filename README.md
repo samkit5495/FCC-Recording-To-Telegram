@@ -143,12 +143,14 @@ Add this line (runs every 6 days at 2 AM):
 The bot sends real-time updates for both recording downloads and credential renewal:
 
 **Recording Downloads:**
+
 - 🚀 Job start notification
 - 📼 Audio files uploaded directly to group
 - ❌ Error notifications if download fails
 - ✅ Job completion notification
 
 **Credential Renewal:**
+
 - 🚀 Process start
 - ✅ Form submission success
 - 📧 Email checking status
@@ -161,11 +163,13 @@ The bot sends real-time updates for both recording downloads and credential rene
 ### Telegram Bot Issues
 
 **Test your bot connection:**
+
 ```bash
 python test_telegram.py
 ```
 
 **Common issues:**
+
 - Bot not in group: Add the bot to your target group
 - Wrong chat ID: Run `python test_telegram.py --get-chat-id` to find it
 - Bot can't send messages: Check bot permissions in group settings
@@ -174,6 +178,7 @@ python test_telegram.py
 ### ChromeDriver Issues
 
 **Ubuntu/Debian:**
+
 ```bash
 sudo apt-get update
 sudo apt-get install chromium-browser chromium-chromedriver
@@ -181,6 +186,7 @@ pip install --upgrade selenium webdriver-manager
 ```
 
 **macOS:**
+
 ```bash
 brew install --cask chromedriver
 ```
