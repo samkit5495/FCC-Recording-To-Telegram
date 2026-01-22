@@ -350,9 +350,9 @@ class FCCCredentialRenewer:
         self.send_telegram_message("🚀 FCC Credential Renewal Process Started")
         
         # Step 1: Request new credentials
-        # if not self.request_new_credentials():
-        #     logging.error("Failed to request credentials. Aborting.")
-        #     return False
+        if not self.request_new_credentials():
+            logging.error("Failed to request credentials. Aborting.")
+            return False
         
         # Step 2: Check email for credentials
         credentials = self.check_email_for_credentials()
