@@ -101,7 +101,7 @@ crontab -e
 Add this line (runs every 6 days at 2 AM):
 
 ```
-0 2 */6 * * cd /path/to/FCC_Telegram_python && /usr/bin/python3 renew_credentials.py >> /path/to/FCC_Telegram_python/cron_renewal.log 2>&1
+0 2 */6 * * cd /path/to/FCC_Telegram_python && ./renew.sh >> /path/to/FCC_Telegram_python/cron_renewal.log 2>&1
 ```
 
 #### Option 2: Systemd Service (Linux)
@@ -111,7 +111,7 @@ See [AUTOMATION_SETUP.md](AUTOMATION_SETUP.md) for detailed setup instructions.
 ### Test Credential Renewal
 
 ```bash
-python3 renew_credentials.py
+./renew.sh
 ```
 
 ## Files
