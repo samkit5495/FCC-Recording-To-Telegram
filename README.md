@@ -5,9 +5,10 @@ Automatically downloads FreeConferenceCall.com recordings and uploads them to Te
 ## Features
 
 - 📥 **Automatic Recording Download** - Downloads recordings from FCC
-- 📤 **Telegram Upload** - Uploads to your specified Telegram channel/chat
+- 📤 **Telegram Upload** - Uploads to your specified Telegram group via bot
 - 🔄 **Auto Credential Renewal** - Automatically renews FCC API credentials every 7 days
-- 🔔 **Telegram Notifications** - Real-time status updates via Telegram
+- 🔔 **Telegram Notifications** - Real-time status updates via Telegram bot
+- 🤖 **Bot-Based** - Uses Telegram Bot API (no personal account needed)
 - 🐧 **Cross-Platform** - Works on Linux servers and macOS
 
 ## Setup
@@ -28,10 +29,9 @@ pip install -r requirements.txt
 Create a `.env` file with the following:
 
 ```env
-# Telegram Configuration
-api_id=your_telegram_api_id
-api_hash=your_telegram_api_hash
-sendTo=Your Channel Name
+# Telegram Bot Configuration
+TELEGRAM_BOT_TOKEN=your_bot_token_from_BotFather
+TELEGRAM_CHAT_ID=your_group_chat_id
 
 # FCC API Credentials
 client_id=your_fcc_client_id
@@ -48,6 +48,24 @@ FCC_PURPOSE=Automated conference recording management and integration with Teleg
 EMAIL_PASSWORD=your_gmail_app_password
 IMAP_SERVER=imap.gmail.com
 ```
+
+**Getting Telegram Bot Credentials:**
+
+1. **Create a bot:**
+   - Message [@BotFather](https://t.me/BotFather) on Telegram
+   - Send `/newbot` and follow the instructions
+   - Copy the bot token (looks like `1888701686:AAHkOFo9lxv_xaDyZDsnTcEXPODYwKLaniQ`)
+
+2. **Get Chat ID:**
+   - Add your bot to the target group
+   - Send a message in the group
+   - Run: `python test_telegram.py --get-chat-id`
+   - Copy the chat ID (negative number like `-1003590283482`)
+
+3. **Test the connection:**
+   ```bash
+   python test_telegram.py
+   ```
 
 **Note:** For Gmail, create an [App Password](https://myaccount.google.com/apppasswords) instead of using your regular password.
 
@@ -90,7 +108,7 @@ Add this line:
 
 FCC credentials expire every 7 days. Automate renewal with:
 
-#### Option 1: Cron Job (recommended for servers)
+#### Cron Job
 
 Edit crontab:
 
@@ -104,10 +122,6 @@ Add this line (runs every 6 days at 2 AM):
 0 2 */6 * * cd /path/to/FCC_Telegram_python && ./renew.sh >> /path/to/FCC_Telegram_python/cron_renewal.log 2>&1
 ```
 
-#### Option 2: Systemd Service (Linux)
-
-See [AUTOMATION_SETUP.md](AUTOMATION_SETUP.md) for detailed setup instructions.
-
 ### Test Credential Renewal
 
 ```bash
@@ -119,14 +133,22 @@ See [AUTOMATION_SETUP.md](AUTOMATION_SETUP.md) for detailed setup instructions.
 - `main.py` - Main script to download and upload recordings
 - `FCC.py` - FCC API wrapper class
 - `renew_credentials.py` - Automated credential renewal script
-- `scheduler.py` - Scheduler for automated renewals
-- `setup_cron.sh` - Setup cron job for renewals
+- `test_telegram.py` - Test Telegram bot connection and get chat ID
+- `run.sh` - Run main script with virtual environment
+- `renew.sh` - Run credential renewal with virtual environment
 - `AUTOMATION_SETUP.md` - Detailed automation setup guide
 
 ## Telegram Notifications
 
-The credential renewal process sends real-time updates:
+The bot sends real-time updates for both recording downloads and credential renewal:
 
+**Recording Downloads:**
+- 🚀 Job start notification
+- 📼 Audio files uploaded directly to group
+- ❌ Error notifications if download fails
+- ✅ Job completion notification
+
+**Credential Renewal:**
 - 🚀 Process start
 - ✅ Form submission success
 - 📧 Email checking status
@@ -136,20 +158,37 @@ The credential renewal process sends real-time updates:
 
 ## Troubleshooting
 
+### Telegram Bot Issues
+
+**Test your bot connection:**
+```bash
+python test_telegram.py
+```
+
+**Common issues:**
+- Bot not in group: Add the bot to your target group
+- Wrong chat ID: Run `python test_telegram.py --get-chat-id` to find it
+- Bot can't send messages: Check bot permissions in group settings
+- Invalid token: Verify `TELEGRAM_BOT_TOKEN` is correct
+
 ### ChromeDriver Issues
 
-- Script automatically manages ChromeDriver
-- For manual installation: `brew install --cask chromedriver` (macOS)
+**Ubuntu/Debian:**
+```bash
+sudo apt-get update
+sudo apt-get install chromium-browser chromium-chromedriver
+pip install --upgrade selenium webdriver-manager
+```
+
+**macOS:**
+```bash
+brew install --cask chromedriver
+```
 
 ### Email Authentication
 
 - Use Gmail App Password, not regular password
 - Enable IMAP access in Gmail settings
-
-### Telegram Connection
-
-- Ensure `api_id` and `api_hash` are correct
-- Run `main.py` once to create session file
 
 ## Documentation
 
