@@ -47,7 +47,7 @@ class FCCCredentialRenewer:
         self.telegram_channel = None
         if self.config.get('api_id') and self.config.get('api_hash'):
             try:
-                self.telegram_client = TelegramClient('renewal_session', 
+                self.telegram_client = TelegramClient('session_name', 
                                                      self.config['api_id'], 
                                                      self.config['api_hash'])
                 self.telegram_client.start()
@@ -92,8 +92,10 @@ class FCCCredentialRenewer:
             # Try to initialize ChromeDriver (works on both Linux and Mac)
             # Selenium 4.6+ has built-in driver management
             try:
-                # Try using Selenium's built-in manager first (most reliable)
-                driver = webdriver.Chrome(options=chrome_options)
+                # Try using Selenium's built-in manager first (most reliable for Chrome 115+)
+                from selenium.webdriver.chrome.service import Service
+                service = Service()
+                driver = webdriver.Chrome(service=service, options=chrome_options)
                 logging.info("ChromeDriver initialized using Selenium Manager")
             except Exception as e1:
                 logging.warning(f"Selenium Manager failed: {str(e1)}")
@@ -106,8 +108,18 @@ class FCCCredentialRenewer:
                     driver = webdriver.Chrome(service=service, options=chrome_options)
                     logging.info("ChromeDriver initialized using webdriver-manager")
                 except Exception as e2:
-                    logging.error(f"webdriver-manager also failed: {str(e2)}")
-                    raise Exception("Could not initialize ChromeDriver. Please install Chrome and ChromeDriver manually.")
+                    logging.warning(f"webdriver-manager also failed: {str(e2)}")
+                    try:
+                        # Final fallback: try without explicit service
+                        driver = webdriver.Chrome(options=chrome_options)
+                        logging.info("ChromeDriver initialized using system PATH")
+                    except Exception as e3:
+                        logging.error(f"All ChromeDriver methods failed. Last error: {str(e3)}")
+                        raise Exception(
+                            "Could not initialize ChromeDriver. Please ensure Chrome/Chromium is installed.\n"
+                            "For Ubuntu/Debian: sudo apt-get install chromium-browser chromium-chromedriver\n"
+                            "Then run: pip install --upgrade selenium webdriver-manager"
+                        )
             
             driver.get(self.fcc_url)
             
