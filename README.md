@@ -78,6 +78,7 @@ python3 main.py
 ```
 
 The script will:
+
 1. Connect to FCC API with stored credentials
 2. If credentials are expired, automatically renew them
 3. Download all available recordings
@@ -109,6 +110,7 @@ Add this line:
 **Automatic Renewal:**
 
 FCC credentials expire every 7 days. The script automatically detects expired credentials and renews them:
+
 - When authentication fails, it triggers the renewal process
 - Submits the form on FCC website
 - Retrieves new credentials from email
@@ -134,12 +136,14 @@ No manual intervention needed! Just ensure your email credentials are configured
 The bot sends real-time updates:
 
 **Recording Downloads:**
+
 - 🚀 Job start notification
 - 📼 Audio files uploaded directly to group
 - ❌ Error notifications with full traceback
 - ✅ Job completion notification
 
 **Automatic Credential Renewal (when triggered):**
+
 - 🔄 Invalid credentials detected
 - 🚀 Renewal process started
 - ✅ Form submission success
@@ -190,6 +194,7 @@ brew install --cask chromedriver
 **Smart Credential Management:**
 
 The FCC class automatically handles credential expiration:
+
 1. Attempts authentication with stored credentials
 2. Detects `invalid_client` error responses
 3. Triggers automatic renewal process via Selenium
