@@ -6,7 +6,7 @@ Automatically downloads FreeConferenceCall.com recordings and uploads them to Te
 
 - 📥 **Automatic Recording Download** - Downloads recordings from FCC
 - 📤 **Telegram Upload** - Uploads to your specified Telegram group via bot
-- 🔄 **Auto Credential Renewal** - Automatically renews FCC API credentials every 7 days
+- 🔄 **Smart Credential Management** - Automatically detects expired credentials and renews them
 - 🔔 **Telegram Notifications** - Real-time status updates via Telegram bot
 - 🤖 **Bot-Based** - Uses Telegram Bot API (no personal account needed)
 - 🐧 **Cross-Platform** - Works on Linux servers and macOS
@@ -69,26 +69,20 @@ IMAP_SERVER=imap.gmail.com
 
 **Note:** For Gmail, create an [App Password](https://myaccount.google.com/apppasswords) instead of using your regular password.
 
-### 3. Get FCC API Credentials
-
-**Option 1: Manual (first time)**
-
-- Visit https://www.freeconferencecall.com/for-developers/free-api
-- Fill the form and get credentials via email
-- Add to `.env` file
-
-**Option 2: Automated (recommended)**
-
-- See [AUTOMATION_SETUP.md](AUTOMATION_SETUP.md) for automated renewal setup
-- Credentials will be automatically renewed every 7 days
-
 ## Usage
 
-### Download Recordings Manually
+### Download Recordings
 
 ```bash
 python3 main.py
 ```
+
+The script will:
+1. Connect to FCC API with stored credentials
+2. If credentials are expired, automatically renew them
+3. Download all available recordings
+4. Upload to Telegram
+5. Delete processed recordings from FCC
 
 ### Schedule Automatic Downloads
 
@@ -104,59 +98,54 @@ Add this line:
 0 18 * * * cd /path/to/FCC_Telegram_python && ./run.sh
 ```
 
-### Automated Credential Renewal
+### 3. Get FCC API Credentials
 
-FCC credentials expire every 7 days. Automate renewal with:
+**Initial Setup:**
 
-#### Cron Job
+- Visit https://www.freeconferencecall.com/for-developers/free-api
+- Fill the form and get credentials via email
+- Add to `.env` file
 
-Edit crontab:
+**Automatic Renewal:**
 
-```bash
-crontab -e
-```
+FCC credentials expire every 7 days. The script automatically detects expired credentials and renews them:
+- When authentication fails, it triggers the renewal process
+- Submits the form on FCC website
+- Retrieves new credentials from email
+- Updates `.env` file automatically
+- Retries the download job with fresh credentials
 
-Add this line (runs every 6 days at 2 AM):
+No manual intervention needed! Just ensure your email credentials are configured correctly.
 
-```
-0 2 */6 * * cd /path/to/FCC_Telegram_python && ./renew.sh >> /path/to/FCC_Telegram_python/cron_renewal.log 2>&1
-```
-
-### Test Credential Renewal
-
-```bash
-./renew.sh
-```
+**Note:** For Gmail, create an [App Password](https://myaccount.google.com/apppasswords) instead of using your regular password.
 
 ## Files
 
 - `main.py` - Main script to download and upload recordings
-- `FCC.py` - FCC API wrapper class
-- `renew_credentials.py` - Automated credential renewal script
+- `FCC.py` - FCC API wrapper class with automatic credential renewal
+- `telegram_utils.py` - Telegram Bot API helper functions
+- `renew_credentials.py` - Credential renewal automation (called automatically by FCC.py)
 - `test_telegram.py` - Test Telegram bot connection and get chat ID
 - `run.sh` - Run main script with virtual environment
-- `renew.sh` - Run credential renewal with virtual environment
-- `AUTOMATION_SETUP.md` - Detailed automation setup guide
+- `requirements.txt` - Python package dependencies
 
 ## Telegram Notifications
 
-The bot sends real-time updates for both recording downloads and credential renewal:
+The bot sends real-time updates:
 
 **Recording Downloads:**
-
 - 🚀 Job start notification
 - 📼 Audio files uploaded directly to group
-- ❌ Error notifications if download fails
+- ❌ Error notifications with full traceback
 - ✅ Job completion notification
 
-**Credential Renewal:**
-
-- 🚀 Process start
+**Automatic Credential Renewal (when triggered):**
+- 🔄 Invalid credentials detected
+- 🚀 Renewal process started
 - ✅ Form submission success
 - 📧 Email checking status
-- ✅ Credentials received
-- 🎉 Process completion
-- ❌ Any errors
+- ✅ Credentials updated
+- 🎉 Download job retried with new credentials
 
 ## Troubleshooting
 
@@ -196,11 +185,19 @@ brew install --cask chromedriver
 - Use Gmail App Password, not regular password
 - Enable IMAP access in Gmail settings
 
-## Documentation
+## How It Works
 
-- [AUTOMATION_SETUP.md](AUTOMATION_SETUP.md) - Complete automation setup guide
-- Includes Linux server deployment instructions
-- Cross-platform support (macOS for testing, Linux for production)
+**Smart Credential Management:**
+
+The FCC class automatically handles credential expiration:
+1. Attempts authentication with stored credentials
+2. Detects `invalid_client` error responses
+3. Triggers automatic renewal process via Selenium
+4. Retrieves new credentials from email
+5. Updates `.env` file with fresh credentials
+6. Retries authentication seamlessly
+
+All happens transparently - no manual intervention needed!
 
 ## License
 

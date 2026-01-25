@@ -1,5 +1,6 @@
 import requests
 import urllib
+from dotenv import dotenv_values
 
 class FCC:
 
@@ -19,7 +20,11 @@ class FCC:
                 'Authorization':'Bearer '+self.access_token
             }).json()
 
-    def __init__(self, client_id, client_secret, username, password):
+    def __init__(self, client_id, client_secret, username, password, auto_renew=True):
+        self.username = username
+        self.password = password
+        self.auto_renew = auto_renew
+        
         resp = requests.post(self.base_url+'v4/token',{
             'grant_type':'password',
             'client_id':client_id,
@@ -28,6 +33,41 @@ class FCC:
             'password':password
         }).json()
         print(resp)
+        
+        # Check for invalid credentials
+        if 'error' in resp and resp['error'] == 'invalid_client' and self.auto_renew:
+            print("Invalid credentials detected. Attempting to renew...")
+            
+            try:
+                from renew_credentials import FCCCredentialRenewer
+                renewer = FCCCredentialRenewer()
+                renewal_success = renewer.renew_credentials()
+                
+                if renewal_success:
+                    print("Credentials renewed successfully. Retrying authentication...")
+                    
+                    # Reload config with new credentials
+                    config = dotenv_values(".env")
+                    client_id = config['client_id']
+                    client_secret = config['client_secret']
+                    
+                    # Retry authentication with new credentials
+                    resp = requests.post(self.base_url+'v4/token',{
+                        'grant_type':'password',
+                        'client_id':client_id,
+                        'client_secret':client_secret,
+                        'username':username,
+                        'password':password
+                    }).json()
+                    print("Authentication retry response:", resp)
+                else:
+                    raise Exception("Credential renewal failed")
+            except Exception as e:
+                raise Exception(f"Failed to renew credentials: {str(e)}")
+        
+        if 'access_token' not in resp:
+            raise Exception(f"Authentication failed: {resp}")
+        
         self.access_token = resp['access_token']
 
     def getConferences(self):

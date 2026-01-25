@@ -15,8 +15,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from dotenv import dotenv_values, set_key
-import requests
 import logging
+from telegram_utils import send_telegram_message
 
 # Setup logging
 logging.basicConfig(
@@ -42,37 +42,10 @@ class FCCCredentialRenewer:
             'purpose': self.config.get('FCC_PURPOSE', 'Automated conference recording management and integration with Telegram bot')
         }
         
-        # Initialize Telegram bot configuration
-        self.bot_token = self.config.get('TELEGRAM_BOT_TOKEN')
-        self.chat_id = self.config.get('TELEGRAM_CHAT_ID')
-        
-        if self.bot_token and self.chat_id:
-            logging.info("✓ Telegram bot configured")
-        else:
-            logging.warning("Telegram bot not configured (missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID)")
-    
-    def send_telegram_message(self, message):
-        """Send status update to Telegram using Bot API"""
-        try:
-            if self.bot_token and self.chat_id:
-                url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
-                payload = {
-                    'chat_id': self.chat_id,
-                    'text': message,
-                    'parse_mode': 'HTML'
-                }
-                response = requests.post(url, json=payload, timeout=10)
-                if response.status_code == 200:
-                    logging.info(f"Telegram notification sent: {message[:50]}...")
-                else:
-                    logging.warning(f"Failed to send Telegram message: {response.text}")
-        except Exception as e:
-            logging.warning(f"Failed to send Telegram message: {str(e)}")
-        
     def request_new_credentials(self):
         """Automate form submission on FCC website"""
         logging.info("Starting credential request process...")
-        self.send_telegram_message("🔄 FCC Credential Renewal: Starting form submission...")
+        send_telegram_message("🔄 FCC Credential Renewal: Starting form submission...")
         
         # Setup Chrome options for headless mode
         chrome_options = Options()
@@ -190,14 +163,14 @@ class FCCCredentialRenewer:
             submit_button.click()
             
             logging.info("Form submitted successfully!")
-            self.send_telegram_message("✅ FCC Form submitted successfully! Waiting for credentials email...")
+            send_telegram_message("✅ FCC Form submitted successfully! Waiting for credentials email...")
             time.sleep(5)  # Wait for submission
             
             return True
             
         except Exception as e:
             logging.error(f"Error during form submission: {str(e)}")
-            self.send_telegram_message(f"❌ FCC Form submission failed: {str(e)}")
+            send_telegram_message(f"❌ FCC Form submission failed: {str(e)}")
             return False
         finally:
             if driver:
@@ -206,7 +179,7 @@ class FCCCredentialRenewer:
     def check_email_for_credentials(self, max_wait_minutes=10):
         """Check email for FCC credentials"""
         logging.info("Checking email for new credentials...")
-        self.send_telegram_message("📧 Checking email for FCC credentials...")
+        send_telegram_message("📧 Checking email for FCC credentials...")
         
         # Email configuration - add these to .env file
         imap_server = self.config.get('IMAP_SERVER', 'imap.gmail.com')
@@ -251,7 +224,7 @@ class FCCCredentialRenewer:
                                     
                                     if credentials:
                                         logging.info("Credentials found in email!")
-                                        self.send_telegram_message("✅ Credentials received! Updating .env file...")
+                                        send_telegram_message("✅ Credentials received! Updating .env file...")
                                         credentials_found = True
                                         mail.close()
                                         mail.logout()
@@ -268,7 +241,7 @@ class FCCCredentialRenewer:
             
         except Exception as e:
             logging.error(f"Error checking email: {str(e)}")
-            self.send_telegram_message(f"❌ Error checking email: {str(e)}")
+            send_telegram_message(f"❌ Error checking email: {str(e)}")
             return None
     
     def _extract_credentials_from_email(self, msg):
@@ -343,7 +316,7 @@ class FCCCredentialRenewer:
             logging.info(f"New client_id: {credentials['client_id']}")
             logging.info(f"New client_secret: {credentials['client_secret'][:10]}...")
             
-            self.send_telegram_message(f"✅ .env updated!\nNew client_id: {credentials['client_id']}\nExpires in ~7 days")
+            send_telegram_message(f"✅ .env updated!\nNew client_id: {credentials['client_id']}\nExpires in ~7 days")
             
             return True
         except Exception as e:
@@ -356,7 +329,7 @@ class FCCCredentialRenewer:
         logging.info("Starting FCC Credential Renewal Process")
         logging.info("=" * 50)
         
-        self.send_telegram_message("🚀 FCC Credential Renewal Process Started")
+        send_telegram_message("🚀 FCC Credential Renewal Process Started")
         
         # Step 1: Request new credentials
         if not self.request_new_credentials():
@@ -379,7 +352,7 @@ class FCCCredentialRenewer:
         logging.info("Credential renewal completed successfully!")
         logging.info("=" * 50)
         
-        self.send_telegram_message("🎉 FCC Credential Renewal Completed Successfully!")
+        send_telegram_message("🎉 FCC Credential Renewal Completed Successfully!")
         
         return True
 
